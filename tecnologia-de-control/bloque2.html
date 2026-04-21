@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Bloque 2 — Electrónica Básica Aplicada | Tec. Control Automotriz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-primary:#0b1120;--bg-secondary:#111827;--bg-card:#1a2332;--bg-card-hover:#1f2b3d;
+  --bg-sidebar:#0d1526;--accent:#38bdf8;--accent-hover:#0ea5e9;
+  --accent-soft:rgba(56,189,248,0.1);--accent-glow:rgba(56,189,248,0.25);
+  --block-color:#a78bfa;--block-soft:rgba(139,92,246,0.1);--block-border:rgba(139,92,246,0.3);
+  --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-muted:#64748b;
+  --border:#1e293b;--border-light:#2a3a50;
+  --radius:12px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,0.3);
+  --transition:0.25s cubic-bezier(0.4,0,0.2,1);--sidebar-width:260px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.6;min-height:100vh;overflow-x:hidden}
+a{text-decoration:none;color:inherit}ul{list-style:none}
+
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-width);height:100vh;background:var(--bg-sidebar);border-right:1px solid var(--border);z-index:1000;display:flex;flex-direction:column;transition:transform var(--transition)}
+.sidebar-header{padding:1.5rem;border-bottom:1px solid var(--border)}
+.sidebar-logo{display:flex;align-items:center;gap:0.75rem}
+.sidebar-logo .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),#6366f1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.sidebar-logo .logo-text{font-size:0.85rem;font-weight:700;line-height:1.3;color:var(--text-primary)}
+.sidebar-logo .logo-sub{font-size:0.7rem;color:var(--text-muted);font-weight:400}
+.sidebar-nav{flex:1;padding:1rem 0;overflow-y:auto}
+.nav-section-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);padding:0.75rem 1.5rem 0.4rem}
+.nav-item{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.5rem;color:var(--text-secondary);font-size:0.85rem;font-weight:500;transition:all var(--transition);cursor:pointer;border-left:3px solid transparent}
+.nav-item:hover{background:var(--accent-soft);color:var(--text-primary)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);border-left-color:var(--accent)}
+.nav-item .nav-icon{width:20px;height:20px;flex-shrink:0;opacity:0.7}
+.nav-item.active .nav-icon{opacity:1}
+.nav-item .nav-badge{margin-left:auto;font-size:0.65rem;background:var(--accent);color:var(--bg-primary);padding:0.1rem 0.5rem;border-radius:10px;font-weight:700}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);font-size:0.7rem;color:var(--text-muted);text-align:center}
+
+.main{margin-left:var(--sidebar-width);min-height:100vh;transition:margin var(--transition)}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(11,17,32,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0.75rem 2rem;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:1rem}
+.menu-toggle{display:none;background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:0.25rem}
+.breadcrumb{font-size:0.8rem;color:var(--text-muted)}
+.breadcrumb a{color:var(--text-secondary);transition:color var(--transition)}
+.breadcrumb a:hover{color:var(--accent)}
+.breadcrumb span{color:var(--block-color);font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:0.75rem}
+.topbar-badge{font-size:0.7rem;background:var(--block-soft);color:var(--block-color);padding:0.3rem 0.75rem;border-radius:20px;font-weight:600;border:1px solid var(--block-border)}
+
+.block-header{background:linear-gradient(135deg,var(--bg-secondary) 0%,#0f1b2e 50%,#111827 100%);padding:2.5rem 2rem;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.block-header::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;background:radial-gradient(circle,var(--block-soft) 0%,transparent 70%);opacity:0.5;pointer-events:none}
+.block-header-content{position:relative;z-index:1}
+.block-label{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--block-color);background:var(--block-soft);padding:0.35rem 0.85rem;border-radius:20px;margin-bottom:0.75rem;border:1px solid var(--block-border)}
+.block-header h1{font-size:1.75rem;font-weight:800;line-height:1.2;margin-bottom:0.5rem;color:var(--text-primary)}
+.block-header p{font-size:0.95rem;color:var(--text-secondary);line-height:1.7;max-width:640px}
+
+.content{padding:2rem;max-width:1200px}
+
+.resource-section{margin-bottom:2.5rem}
+.resource-section-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)}
+.section-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.section-icon.presentaciones{background:rgba(56,189,248,0.12);color:#38bdf8}
+.section-icon.infografias{background:rgba(139,92,246,0.12);color:#a78bfa}
+.section-icon.practicas{background:rgba(34,197,94,0.12);color:#4ade80}
+.resource-section-header h2{font-size:1.1rem;font-weight:700;color:var(--text-primary)}
+.resource-section-header .section-count{font-size:0.7rem;background:var(--bg-secondary);color:var(--text-muted);padding:0.2rem 0.6rem;border-radius:10px;font-weight:600;margin-left:auto}
+
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.resource-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:flex-start;gap:1rem;transition:all var(--transition);cursor:pointer}
+.resource-card:hover{border-color:var(--block-color);background:var(--bg-card-hover);transform:translateY(-2px);box-shadow:0 4px 20px rgba(139,92,246,0.08)}
+.resource-card .r-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--block-soft);color:var(--block-color)}
+.resource-card .r-icon svg{width:18px;height:18px}
+.resource-card .r-info{flex:1;min-width:0}
+.resource-card .r-info h4{font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resource-card .r-info p{font-size:0.72rem;color:var(--text-muted);line-height:1.4}
+.resource-card .r-arrow{flex-shrink:0;color:var(--text-muted);transition:all var(--transition);align-self:center}
+.resource-card:hover .r-arrow{color:var(--block-color);transform:translateX(3px)}
+
+.section-loading{display:flex;align-items:center;gap:0.75rem;padding:1.5rem;color:var(--text-muted);font-size:0.85rem}
+.section-loading .spinner-sm{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.section-error{padding:1rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-sm);color:#fca5a5;font-size:0.8rem}
+.section-error a{color:#38bdf8;text-decoration:underline}
+.section-empty{padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.85rem}
+
+.block-nav{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.block-nav-link{display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;font-weight:600;color:var(--text-secondary);padding:0.6rem 1.25rem;border-radius:var(--radius-sm);background:var(--bg-card);border:1px solid var(--border);transition:all var(--transition)}
+.block-nav-link:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.block-nav-link svg{width:16px;height:16px}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999}
+.overlay.active{display:block}
+
+@media(max-width:1024px){.resource-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0} .menu-toggle{display:block} .content{padding:1.25rem}
+  .block-header h1{font-size:1.3rem} .resource-grid{grid-template-columns:1fr}
+  .topbar{padding:0.75rem 1.25rem}
+  .block-nav{flex-direction:column;gap:0.75rem} .block-nav-link{width:100%;justify-content:center}
+}
+</style>
+</head>
+
+<body>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">⚡</div>
+      <div><div class="logo-text">Tec. Control Automotriz</div><div class="logo-sub">Campus Virtual</div></div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Navegación</div>
+    <a href="index.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio</a>
+    <div class="nav-section-title">Bloques del Curso</div>
+    <a href="bloque1.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Bloque 1 — Fundamentos</a>
+    <a href="bloque2.html" class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>Bloque 2 — Electrónica</a>
+    <a href="bloque3.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Bloque 3 — Arduino</a>
+    <a href="bloque4.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Bloque 4 — Sistemas</a>
+    <div class="nav-section-title">Recursos</div>
+    <a href="https://github.com/Alexis-Gerez/Tecnologia-de-control" target="_blank" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>Repositorio GitHub</a>
+  </nav>
+  <div class="sidebar-footer">&copy; 2025 Tec. Control Automotriz</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="breadcrumb"><a href="index.html">Campus</a> / <span>Bloque 2</span></div>
+    </div>
+    <div class="topbar-right"><div class="topbar-badge">Bloque 2</div></div>
+  </header>
+
+  <section class="block-header">
+    <div class="block-header-content">
+      <div class="block-label">Bloque 02</div>
+      <h1>Electrónica Básica Aplicada</h1>
+      <p>Componentes electrónicos y su aplicación en sistemas automotrices. Diodos, transistores, circuitos integrados y su rol en el control vehicular.</p>
+    </div>
+  </section>
+
+  <div class="content">
+    <div class="resource-section">
+      <div class="resource-section-header">
+        <div class="section-icon presentaciones"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h2>Presentaciones</h2>
+        <span class="section-count" id="count-presentaciones">—</span>
+      </div>
+      <div class="resource-grid" id="grid-presentaciones"><div class="section-loading"><div class="spinner-sm"></div>Cargando archivos...</div></div>
+    </div>
+    <div class="resource-section">
+      <div class="resource-section-header">
+        <div class="section-icon infografias"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+        <h2>Infografías</h2>
+        <span class="section-count" id="count-infografias">—</span>
+      </div>
+      <div class="resource-grid" id="grid-infografias"><div class="section-loading"><div class="spinner-sm"></div>Cargando archivos...</div></div>
+    </div>
+    <div class="resource-section">
+      <div class="resource-section-header">
+        <div class="section-icon practicas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <h2>Prácticas</h2>
+        <span class="section-count" id="count-practicas">—</span>
+      </div>
+      <div class="resource-grid" id="grid-practicas"><div class="section-loading"><div class="spinner-sm"></div>Cargando archivos...</div></div>
+    </div>
+
+    <div class="block-nav">
+      <a href="bloque1.html" class="block-nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Bloque 1 — Fundamentos</a>
+      <a href="bloque3.html" class="block-nav-link">Bloque 3 — Arduino<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+    </div>
+  </div>
+</div>
+
+<script>
+const REPO='Alexis-Gerez/Tecnologia-de-control',REF='main',BLOCK=2,BLOCK_PATH='Bloque2-electronica aplicada';
+const FILE_ICONS={pptx:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',ppt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',pdf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',docx:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',png:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',jpg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',jpeg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',xlsx:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>',default:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'};
+const TYPE_LABELS={pptx:'Presentación',ppt:'Presentación',odp:'Presentación',pdf:'Documento PDF',docx:'Documento Word',doc:'Documento Word',odt:'Documento',xlsx:'Planilla',xls:'Planilla',ods:'Planilla',png:'Imagen',jpg:'Imagen',jpeg:'Imagen',gif:'Imagen',svg:'Imagen',webp:'Imagen'};
+function getExt(n){return n.split('.').pop().toLowerCase()}
+function formatSize(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB'}
+function cleanName(n){return n.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ').replace(/^\d+[\s._-]*/,'')}
+async function fetchFiles(cat){const ck=`campus_files_B${BLOCK}_${cat}`,tk=`campus_ts_B${BLOCK}_${cat}`,c=sessionStorage.getItem(ck),t=sessionStorage.getItem(tk);if(c&&t&&(Date.now()-parseInt(t))<600000)return JSON.parse(c);const path=`${BLOCK_PATH}/${cat}`,url=`https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(path)}?ref=${REF}`;try{const r=await fetch(url);if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json(),f=d.filter(i=>i.type==='file');sessionStorage.setItem(ck,JSON.stringify(f));sessionStorage.setItem(tk,Date.now().toString());return f}catch(e){if(c)return JSON.parse(c);throw e}}
+function renderFileCard(file,idx,cat){const ext=getExt(file.name),icon=FILE_ICONS[ext]||FILE_ICONS.default,tl=TYPE_LABELS[ext]||'Archivo',dn=cleanName(file.name),p=new URLSearchParams({url:file.download_url,title:dn,type:ext,block:BLOCK.toString(),category:cat,index:idx.toString()});return`<a href="visor.html?${p.toString()}" class="resource-card"><div class="r-icon">${icon}</div><div class="r-info"><h4 title="${file.name}">${dn}</h4><p>${tl} · ${formatSize(file.size)}</p></div><div class="r-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div></a>`}
+async function loadCategory(cat){const grid=document.getElementById(`grid-${cat}`),count=document.getElementById(`count-${cat}`);try{const files=await fetchFiles(cat);count.textContent=`${files.length} archivo${files.length!==1?'s':''}`;if(!files.length){grid.innerHTML='<div class="section-empty">No hay archivos disponibles en esta sección.</div>';return}files.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));grid.innerHTML=files.map((f,i)=>renderFileCard(f,i,cat)).join('')}catch(e){const gu=`https://github.com/${REPO}/tree/${REF}/${encodeURIComponent(BLOCK_PATH+'/'+cat)}`;grid.innerHTML=`<div class="section-error">No se pudieron cargar los archivos. <a href="${gu}" target="_blank">Ver en GitHub</a></div>`;count.textContent='Error'}}
+document.addEventListener('DOMContentLoaded',()=>{loadCategory('presentaciones');loadCategory('infografias');loadCategory('practicas')});
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('active')}
+window.addEventListener('resize',()=>{if(window.innerWidth>768){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active')}});
+</script>
+</body>
+</html>

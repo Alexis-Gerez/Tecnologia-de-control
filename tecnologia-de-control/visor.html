@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Visor — Tec. Control Automotriz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-primary:#0b1120;--bg-secondary:#111827;--bg-card:#1a2332;--bg-card-hover:#1f2b3d;
+  --bg-sidebar:#0d1526;--accent:#38bdf8;--accent-hover:#0ea5e9;
+  --accent-soft:rgba(56,189,248,0.1);--text-primary:#e2e8f0;--text-secondary:#94a3b8;
+  --text-muted:#64748b;--border:#1e293b;--border-light:#2a3a50;
+  --radius:12px;--radius-sm:8px;--transition:0.25s cubic-bezier(0.4,0,0.2,1);
+  --sidebar-width:260px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.6}
+a{text-decoration:none;color:inherit}ul{list-style:none}
+
+/* LAYOUT: full viewport */
+.app{display:flex;height:100vh;width:100%}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-width);height:100vh;background:var(--bg-sidebar);border-right:1px solid var(--border);z-index:1000;display:flex;flex-direction:column;transition:transform var(--transition);flex-shrink:0}
+.sidebar-header{padding:1.5rem;border-bottom:1px solid var(--border)}
+.sidebar-logo{display:flex;align-items:center;gap:0.75rem}
+.sidebar-logo .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),#6366f1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.sidebar-logo .logo-text{font-size:0.85rem;font-weight:700;line-height:1.3;color:var(--text-primary)}
+.sidebar-logo .logo-sub{font-size:0.7rem;color:var(--text-muted);font-weight:400}
+.sidebar-nav{flex:1;padding:1rem 0;overflow-y:auto}
+.nav-section-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted);padding:0.75rem 1.5rem 0.4rem}
+.nav-item{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.5rem;color:var(--text-secondary);font-size:0.85rem;font-weight:500;transition:all var(--transition);cursor:pointer;border-left:3px solid transparent}
+.nav-item:hover{background:var(--accent-soft);color:var(--text-primary)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);border-left-color:var(--accent)}
+.nav-item .nav-icon{width:20px;height:20px;flex-shrink:0;opacity:0.7}
+.nav-item.active .nav-icon{opacity:1}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);font-size:0.7rem;color:var(--text-muted);text-align:center}
+
+/* MAIN AREA: fills remaining space */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+/* TOPBAR */
+.topbar{flex-shrink:0;background:rgba(11,17,32,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0.5rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:10}
+.topbar-left{display:flex;align-items:center;gap:0.75rem;min-width:0}
+.menu-toggle{display:none;background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:0.25rem}
+.breadcrumb{font-size:0.78rem;color:var(--text-muted);display:flex;align-items:center;gap:0.25rem;flex-wrap:wrap;overflow:hidden;white-space:nowrap}
+.breadcrumb a{color:var(--text-secondary);transition:color var(--transition)}
+.breadcrumb a:hover{color:var(--accent)}
+.breadcrumb .bc-sep{color:var(--text-muted);margin:0 0.1rem}
+.breadcrumb .bc-current{color:var(--accent);font-weight:600}
+
+/* VIEWER CONTROLS */
+.viewer-controls{display:flex;align-items:center;gap:0.4rem;flex-shrink:0}
+.ctrl-btn{display:inline-flex;align-items:center;gap:0.35rem;padding:0.35rem 0.7rem;border-radius:var(--radius-sm);font-size:0.72rem;font-weight:600;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border);cursor:pointer;transition:all var(--transition);white-space:nowrap}
+.ctrl-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.ctrl-btn:disabled{opacity:0.3;pointer-events:none}
+.ctrl-btn svg{width:13px;height:13px;flex-shrink:0}
+.ctrl-btn.primary{background:var(--accent);color:var(--bg-primary);border-color:var(--accent)}
+.ctrl-btn.primary:hover{background:var(--accent-hover)}
+
+/* VIEWER AREA: fills all remaining vertical space */
+.viewer-wrapper{flex:1;position:relative;background:#0a0f1a;overflow:hidden}
+
+/* LOADING */
+.viewer-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;z-index:10;background:rgba(10,15,26,0.95)}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.viewer-loading p{font-size:0.85rem;color:var(--text-muted)}
+
+/* IFRAME VIEWER - fills entire wrapper */
+.viewer-iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#fff}
+
+/* IMAGE VIEWER */
+.viewer-image-container{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:2rem;cursor:zoom-in;overflow:auto}
+.viewer-image-container.zoomed{cursor:zoom-out}
+.viewer-image{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 4px 30px rgba(0,0,0,0.5);transition:transform 0.3s ease}
+.viewer-image-container.zoomed .viewer-image{max-width:none;max-height:none;transform:scale(2)}
+
+/* UNSUPPORTED */
+.viewer-unsupported{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;padding:3rem;text-align:center;position:absolute;inset:0}
+.viewer-unsupported .unsupported-icon{font-size:3rem;opacity:0.5}
+.viewer-unsupported h3{font-size:1.1rem;color:var(--text-primary)}
+.viewer-unsupported p{font-size:0.85rem;color:var(--text-muted);max-width:400px}
+
+/* FILE NAV BAR */
+.file-nav{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0.45rem 1.5rem;background:var(--bg-secondary);border-top:1px solid var(--border)}
+.file-nav-info{font-size:0.72rem;color:var(--text-muted)}
+.file-nav-info strong{color:var(--text-secondary)}
+.file-nav-actions{display:flex;gap:0.4rem}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999}
+.overlay.active{display:block}
+
+/* FULLSCREEN: hide sidebar */
+.fullscreen-active .sidebar{position:fixed;transform:translateX(-100%)}
+
+@media(max-width:768px){
+  .sidebar{position:fixed;top:0;left:0;transform:translateX(-100%);z-index:1001}
+  .sidebar.open{transform:translateX(0)}
+  .menu-toggle{display:block}
+  .topbar{padding:0.45rem 1rem}
+  .viewer-controls{gap:0.2rem}
+  .ctrl-btn span{display:none}
+  .ctrl-btn{padding:0.3rem 0.5rem}
+  .file-nav{padding:0.4rem 1rem;flex-direction:column;gap:0.4rem}
+  .breadcrumb{font-size:0.68rem}
+}
+</style>
+</head>
+
+<body>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">⚡</div>
+      <div><div class="logo-text">Tec. Control Automotriz</div><div class="logo-sub">Campus Virtual</div></div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Navegación</div>
+    <a href="index.html" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio</a>
+    <div class="nav-section-title">Bloques del Curso</div>
+    <a href="bloque1.html" class="nav-item" id="nav-b1"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Bloque 1</a>
+    <a href="bloque2.html" class="nav-item" id="nav-b2"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>Bloque 2</a>
+    <a href="bloque3.html" class="nav-item" id="nav-b3"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Bloque 3</a>
+    <a href="bloque4.html" class="nav-item" id="nav-b4"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Bloque 4</a>
+    <div class="nav-section-title">Recursos</div>
+    <a href="https://github.com/Alexis-Gerez/Tecnologia-de-control" target="_blank" class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>Repositorio</a>
+  </nav>
+  <div class="sidebar-footer">&copy; 2025 Tec. Control Automotriz</div>
+</aside>
+
+<!-- MAIN -->
+<div class="main" id="mainArea">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="breadcrumb" id="breadcrumb">Cargando...</div>
+    </div>
+    <div class="viewer-controls">
+      <button class="ctrl-btn" id="btnPrev" onclick="navigateFile(-1)" title="Archivo anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg><span>Anterior</span>
+      </button>
+      <button class="ctrl-btn" id="btnNext" onclick="navigateFile(1)" title="Archivo siguiente">
+        <span>Siguiente</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="ctrl-btn" onclick="toggleFullscreen()" title="Pantalla completa" id="btnFullscreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      </button>
+      <a class="ctrl-btn primary" id="btnDownload" href="#" download title="Descargar archivo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Descargar</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- VIEWER: fills all remaining space -->
+  <div class="viewer-wrapper" id="viewerWrapper">
+    <div class="viewer-loading" id="viewerLoading">
+      <div class="spinner"></div>
+      <p>Cargando archivo...</p>
+    </div>
+  </div>
+
+  <!-- FILE NAV BAR -->
+  <div class="file-nav">
+    <div class="file-nav-info" id="fileNavInfo">—</div>
+    <div class="file-nav-actions">
+      <a class="ctrl-btn" id="btnBackBlock" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
+        Volver al bloque
+      </a>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const REPO='Alexis-Gerez/Tecnologia-de-control',REF='main';
+const params=new URLSearchParams(window.location.search);
+const fileUrl=params.get('url');
+const fileTitle=params.get('title')||'Archivo';
+const blockNum=params.get('block')||'1';
+const category=params.get('category')||'presentaciones';
+const fileIndex=parseInt(params.get('index')||'0');
+
+const BLOCK_NAMES={'1':'Fundamentos Eléctricos','2':'Electrónica Básica Aplicada','3':'Control Electrónico con Arduino','4':'Sistemas Automotrices Integrados'};
+const CATEGORY_NAMES={'presentaciones':'Presentaciones','infografias':'Infografías','practicas':'Prácticas'};
+
+function getExtension(url){return url.split('/').pop().split('?')[0].split('.').pop().toLowerCase()}
+function getFileType(ext){const t={pptx:'office',ppt:'office',odp:'office',docx:'office',doc:'office',odt:'office',xlsx:'office',xls:'office',ods:'office',pdf:'pdf',png:'image',jpg:'image',jpeg:'image',gif:'image',svg:'image',webp:'image',bmp:'image'};return t[ext]||'unsupported'}
+
+function updateBreadcrumb(){
+  const bc=document.getElementById('breadcrumb'),bp=`bloque${blockNum}.html`;
+  bc.innerHTML=`<a href="index.html">Campus</a><span class="bc-sep">/</span><a href="${bp}">Bloque ${blockNum}</a><span class="bc-sep">/</span><a href="${bp}">${CATEGORY_NAMES[category]||category}</a><span class="bc-sep">/</span><span class="bc-current">${fileTitle}</span>`;
+}
+
+function setActiveNav(){const n=document.getElementById(`nav-b${blockNum}`);if(n)n.classList.add('active')}
+function setBackButton(){document.getElementById('btnBackBlock').href=`bloque${blockNum}.html`}
+function setDownloadButton(){document.getElementById('btnDownload').href=fileUrl}
+
+function loadFileList(){try{const k=`campus_files_B${blockNum}_${category}`,d=sessionStorage.getItem(k);return d?JSON.parse(d):[]}catch(e){return[]}}
+
+function updateFileNav(){
+  const files=loadFileList(),idx=fileIndex,total=files.length;
+  document.getElementById('btnPrev').disabled=(idx<=0);
+  document.getElementById('btnNext').disabled=(idx>=total-1);
+  const info=document.getElementById('fileNavInfo');
+  info.innerHTML=total>0?`Archivo <strong>${idx+1}</strong> de <strong>${total}</strong>`:`<strong>${fileTitle}</strong>`;
+}
+
+function navigateFile(dir){
+  const files=loadFileList(),ni=fileIndex+dir;
+  if(ni<0||ni>=files.length)return;
+  const f=files[ni],ext=getExtension(f.download_url),name=f.name.replace(/\.[^.]+$/,'');
+  const p=new URLSearchParams({url:f.download_url,title:name,type:ext,block:blockNum,category:category,index:ni.toString()});
+  window.location.href=`visor.html?${p.toString()}`;
+}
+
+/* ===== VIEWER LOADERS ===== */
+function loadOfficeViewer(url){
+  const wrapper=document.getElementById('viewerWrapper'),loading=document.getElementById('viewerLoading');
+  const iframe=document.createElement('iframe');
+  iframe.className='viewer-iframe';
+  iframe.setAttribute('frameborder','0');
+  iframe.setAttribute('allowfullscreen','true');
+  // Microsoft Office Online embed - full width/height via absolute positioning in CSS
+  iframe.src=`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+  iframe.onload=()=>{loading.style.display='none'};
+  setTimeout(()=>{if(loading.style.display!=='none')loading.style.display='none'},10000);
+  wrapper.appendChild(iframe);
+}
+
+function loadPDFViewer(url){
+  const wrapper=document.getElementById('viewerWrapper'),loading=document.getElementById('viewerLoading');
+  const iframe=document.createElement('iframe');
+  iframe.className='viewer-iframe';
+  iframe.setAttribute('frameborder','0');
+  iframe.src=url;
+  iframe.onload=()=>{loading.style.display='none'};
+  setTimeout(()=>{if(loading.style.display!=='none')loading.style.display='none'},6000);
+  wrapper.appendChild(iframe);
+}
+
+function loadImageViewer(url){
+  const wrapper=document.getElementById('viewerWrapper'),loading=document.getElementById('viewerLoading');
+  const container=document.createElement('div');
+  container.className='viewer-image-container';
+  const img=document.createElement('img');
+  img.className='viewer-image';img.alt=fileTitle;img.src=url;
+  img.onload=()=>{loading.style.display='none'};
+  img.onerror=()=>{loading.style.display='none';container.innerHTML='<div class="viewer-unsupported"><div class="unsupported-icon">🖼️</div><h3>No se pudo cargar la imagen</h3><p>Intenta descargar el archivo.</p></div>'};
+  container.onclick=()=>{container.classList.toggle('zoomed')};
+  container.appendChild(img);wrapper.appendChild(container);
+}
+
+function loadUnsupported(ext){
+  const wrapper=document.getElementById('viewerWrapper'),loading=document.getElementById('viewerLoading');
+  loading.style.display='none';
+  wrapper.innerHTML=`<div class="viewer-unsupported"><div class="unsupported-icon">📄</div><h3>Vista previa no disponible</h3><p>Los archivos .${ext} no se pueden previsualizar en el navegador. Puedes descargar el archivo para abrirlo en tu equipo.</p><a class="ctrl-btn primary" href="${fileUrl}" download style="margin-top:0.5rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar archivo</a></div>`;
+}
+
+/* ===== FULLSCREEN ===== */
+let isFullscreen=false;
+function toggleFullscreen(){
+  isFullscreen=!isFullscreen;
+  document.body.classList.toggle('fullscreen-active',isFullscreen);
+  // Also try native fullscreen
+  if(isFullscreen){document.documentElement.requestFullscreen?.()}else{document.exitFullscreen?.()}
+}
+
+/* ===== SIDEBAR ===== */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('active')}
+
+/* ===== INIT ===== */
+function init(){
+  if(!fileUrl){
+    document.getElementById('viewerLoading').innerHTML='<div class="viewer-unsupported"><div class="unsupported-icon">⚠️</div><h3>No se especificó un archivo</h3><p>Vuelve al campus para seleccionar un archivo.</p><a class="ctrl-btn primary" href="index.html">Ir al campus</a></div>';
+    return;
+  }
+  updateBreadcrumb();setActiveNav();setBackButton();setDownloadButton();updateFileNav();
+  const ext=getExtension(fileUrl),type=getFileType(ext);
+  switch(type){case 'office':loadOfficeViewer(fileUrl);break;case 'pdf':loadPDFViewer(fileUrl);break;case 'image':loadImageViewer(fileUrl);break;default:loadUnsupported(ext)}
+  document.addEventListener('keydown',(e)=>{if(e.key==='ArrowLeft')navigateFile(-1);if(e.key==='ArrowRight')navigateFile(1)});
+}
+window.addEventListener('resize',()=>{if(window.innerWidth>768){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active')}});
+init();
+</script>
+</body>
+</html>
